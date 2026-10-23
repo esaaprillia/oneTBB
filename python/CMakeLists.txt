@@ -13,12 +13,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+set(PY_VARS "")
 set(PY_EXECUTABLE "")
 if(CMAKE_VERSION VERSION_LESS 3.12)
   find_package(PythonInterp 3.5 REQUIRED)
+  set(PY_VARS "${PYTHON3_VARS}")
   set(PY_EXECUTABLE "${PYTHON_EXECUTABLE}")
 else()
   find_package(Python3 3.5 REQUIRED COMPONENTS Interpreter)
+  set(PY_VARS "${PYTHON3_VARS}")
   set(PY_EXECUTABLE "${Python3_EXECUTABLE}")
 endif()
 
@@ -51,7 +54,7 @@ add_custom_target(
     ${CMAKE_COMMAND} -E env
         TBB_INCLUDEDIRS="${TBB4PY_INCLUDE_STRING}"
         TBB_LIBDIRS=$<TARGET_FILE_DIR:TBB::tbb>
-    ${PY_EXECUTABLE} -m pip install
+    ${PY_VARS} ${PY_EXECUTABLE} -m
         --no-build-isolation
         --prefix build
         ./${PYTHON_BUILD_WORK_DIR}
@@ -62,6 +65,7 @@ add_test(NAME python_test
          COMMAND ${CMAKE_COMMAND}
                  -DTBB_BINARIES_PATH=$<TARGET_FILE_DIR:TBB::tbb>
                  -DPYTHON_MODULE_BUILD_PATH=${PYTHON_BUILD_WORK_DIR}/build
+                 -DPY_EXECUTABLE=${PY_VARS} ${PY_EXECUTABLE}
                  -P ${PROJECT_SOURCE_DIR}/cmake/python/test_launcher.cmake)
 
 install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/build/
@@ -72,3 +76,4 @@ if (UNIX AND NOT APPLE)
     add_subdirectory(rml)
     add_dependencies(python_build irml)
 endif()
+
